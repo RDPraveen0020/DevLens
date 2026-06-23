@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "DevLens",
+  "version": "0.1.0",
+  "description": "Hover to reveal the component or page under your cursor — Angular, React, Vue, Mendix, Blazor.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "background": { "scripts": ["background.js"] },
+  "action": {
+    "default_title": "Toggle DevLens inspect mode",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "commands": {
+    "toggle-inspect": {
+      "suggested_key": { "default": "Alt+Shift+C" },
+      "description": "Toggle DevLens inspect mode"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": { "id": "devlens@rapiddata.com", "strict_min_version": "128.0" }
+  }
+}

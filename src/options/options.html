@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DevLens Settings</title>
+    <style>
+      body { font: 14px/1.5 system-ui, sans-serif; max-width: 420px; margin: 24px auto; }
+      h1 { font-size: 18px; }
+      label { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+      .hint { color: #666; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>DevLens</h1>
+    <p class="hint">Toggle inspect mode with the toolbar icon or <kbd>Alt+Shift+C</kbd>.</p>
+
+    <label><input type="checkbox" id="showName" /> Show component / page name</label>
+    <label><input type="checkbox" id="showIdentityPath" /> Show identity path</label>
+    <label><input type="checkbox" id="showBreadcrumb" /> Show hierarchy breadcrumb</label>
+    <label>Component prefix
+      <input type="text" id="ownPrefix" placeholder="app" size="12" />
+    </label>
+    <p class="hint">Your app's selector prefix (from <code>angular.json</code>). The tooltip shows the nearest component with this prefix, skipping library components like <code>mat-card</code>.</p>
+
+    <!-- API inspector — hidden for release. Re-enable to restore "Show API calls".
+    <label><input type="checkbox" id="showApis" /> Show API calls</label>
+    <label>Max APIs shown
+      <input type="number" id="apiLimit" min="1" max="100" style="width:64px" />
+    </label>
+    -->
+
+    <label>Click action
+      <select id="clickAction">
+        <option value="copy">Copy identity path</option>
+        <option value="none">Do nothing</option>
+      </select>
+    </label>
+
+    <!-- Component Src (Open in IDE) — hidden for release. Re-enable to restore IDE open + map imports.
+    <label>IDE
+      <select id="ide">
+        <option value="vscode">VS Code</option>
+        <option value="cursor">Cursor</option>
+        <option value="jetbrains">JetBrains (WebStorm/IntelliJ)</option>
+        <option value="custom">Custom…</option>
+      </select>
+    </label>
+
+    <label>Custom URL template
+      <input type="text" id="ideUrlTemplate" placeholder="vscode://file/{path}:{line}:{col}" size="40" />
+    </label>
+    <p class="hint">Placeholders: <code>{path}</code>, <code>{line}</code>, <code>{col}</code>. Used only when IDE = Custom.</p>
+
+    <label>Project root
+      <input type="text" id="projectRoot" placeholder="C:/proj or /home/me/proj" size="40" />
+    </label>
+    <p class="hint">Absolute local path (the folder containing <code>angular.json</code>, NOT <code>/src</code>); prepended to the map's relative file paths.</p>
+
+    <hr />
+    <label>Selector map (for Open in IDE)
+      <input type="file" id="mapFile" accept="application/json,.json" />
+    </label>
+    <p class="hint">
+      Generate it with <code>node tools/dl-selector-map/cli.mjs</code> in your Angular project, then import
+      <code>src/assets/devlens-map.json</code> here. Stored in the extension so Open in IDE works on any site
+      (localhost <em>and</em> deployed). <button id="mapClear" type="button">Clear map</button>
+    </p>
+    <p class="hint" id="mapStatus"></p>
+
+    <hr />
+    <label>API map (for Show API calls)
+      <input type="file" id="apiMapFile" accept="application/json,.json" />
+    </label>
+    <p class="hint">
+      Generate with <code>node tools/dl-api-map/cli.mjs</code>, then import
+      <code>src/assets/devlens-api-map.json</code>. <button id="apiMapClear" type="button">Clear API map</button>
+    </p>
+    <p class="hint" id="apiMapStatus"></p>
+    -->
+
+    <p class="hint" id="status"></p>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
