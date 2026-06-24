@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import { Overlay } from './overlay';
+import { Panel } from './panel';
 import { InspectController } from './controller';
 import { createActivationGate } from './activation';
 import { loadSettings } from '../options/storage';
@@ -11,6 +12,32 @@ import type { ApiMap, InspectResult } from '../shared/types';
 declare global {
   interface Window {
     __devlensContentReady?: boolean;
+  }
+}
+
+/**
+ * Copy text to the clipboard, falling back to execCommand when the async
+ * Clipboard API is unavailable or rejects (e.g. document not focused). Without
+ * the fallback a failed write is silent, which can look like "nothing copied".
+ */
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    // fall through to the legacy path
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+    document.documentElement.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  } catch {
+    // give up silently
   }
 }
 
@@ -32,39 +59,22 @@ async function init(): Promise<void> {
   });
 
   const overlay = new Overlay();
+  const panel = new Panel();
   let settings = await loadSettings();
 
   // Selector → "relpath:line" map. Prefer a map imported into the extension
   // (works on ANY origin, including deployed apps); fall back to fetching it from
   // the app origin (localhost dev convenience).
+  // Selector → "relpath:line" map for the (currently hidden) Open-in-IDE feature.
+  // Only the extension-storage source is read. The previous fallback fetched
+  // `${origin}/assets/devlens-map.json` and warned on every deployed app where it
+  // doesn't exist — noise, especially now that the map import UI is hidden.
   let componentMap: Record<string, string> | null = null;
   const loadMap = async (): Promise<void> => {
     try {
-      const stored = await loadMapFromStorage();
-      if (stored) {
-        componentMap = stored;
-        console.info('[DevLens] selector map from extension storage:', Object.keys(stored).length, 'entries');
-        return;
-      }
+      componentMap = (await loadMapFromStorage()) ?? null;
     } catch {
-      // ignore; try the origin fetch
-    }
-
-    const url = `${location.origin}/assets/devlens-map.json`;
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      const contentType = res.headers.get('content-type') ?? '';
-      if (res.ok && contentType.includes('json')) {
-        componentMap = (await res.json()) as Record<string, string>;
-        console.info('[DevLens] selector map fetched:', Object.keys(componentMap).length, 'entries from', url);
-      } else {
-        console.warn(
-          `[DevLens] no selector map at ${url} (status ${res.status}, type "${contentType || 'unknown'}").`,
-          'Import the map in DevLens Options (Open in IDE works on deployed apps that way).',
-        );
-      }
-    } catch (e) {
-      console.warn('[DevLens] selector map fetch failed at', url, '—', e);
+      componentMap = null;
     }
   };
   void loadMap();
@@ -88,7 +98,8 @@ async function init(): Promise<void> {
     settings,
     postToBridge: (req) => window.postMessage(req, '*'),
     overlay,
-    copy: (text) => navigator.clipboard.writeText(text).catch(() => {}),
+    panel,
+    copy: (text) => copyText(text),
     resolveOpenUrl: (result: InspectResult) => {
       const url = resolveOpenUrlFor(settings, result, componentMap);
       if (!url) {
@@ -146,9 +157,44 @@ async function init(): Promise<void> {
     controller.onPointerMove(e);
   };
 
-  const onClick = (e: MouseEvent) => void controller.onClick(e);
+  // Clicks on DevLens' own UI (the pinned panel, the overlay) must not trigger
+  // the page-level copy action or be swallowed.
+  const onOwnUi = (e: Event): boolean => {
+    const path = (e.composedPath?.() ?? []) as EventTarget[];
+    return path.some(
+      (n) => n instanceof HTMLElement && (n.id === 'devlens-panel' || n.id === 'devlens-overlay'),
+    );
+  };
+
+  const onClick = (e: MouseEvent) => {
+    if (onOwnUi(e)) return;
+    void controller.onClick(e);
+  };
+
+  const isTyping = (): boolean => {
+    const a = document.activeElement as HTMLElement | null;
+    if (!a) return false;
+    return a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable;
+  };
+
   const onKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') deactivate();
+    if (e.key === 'Escape') {
+      if (controller.isPinned()) controller.togglePin();
+      else deactivate();
+      return;
+    }
+    if (isTyping() || e.altKey || e.ctrlKey || e.metaKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'f' && settings.pinEnabled) {
+      e.preventDefault();
+      controller.togglePin();
+    } else if (k === 'h' && settings.highlightAll) {
+      e.preventDefault();
+      controller.toggleHighlight();
+    } else if (k === 'a' && settings.testIdAudit) {
+      e.preventDefault();
+      controller.toggleAudit();
+    }
   };
 
   // Idempotent so repeated activate/deactivate (e.g. re-injection, buffered state)
@@ -160,6 +206,7 @@ async function init(): Promise<void> {
     void loadMap();
     void loadApiMap();
     controller.activate();
+    panel.mount();
     window.addEventListener('mousemove', onMove, true);
     window.addEventListener('click', onClick, true);
     window.addEventListener('keydown', onKeydown, true);

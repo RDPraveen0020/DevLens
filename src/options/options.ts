@@ -1,9 +1,34 @@
 import { loadSettings, saveSettings } from './storage';
 import type { Settings } from '../shared/types';
 
-const CHECKBOXES: (keyof Settings)[] = ['showName', 'showIdentityPath', 'showBreadcrumb'];
-const SELECTS: (keyof Settings)[] = ['clickAction'];
-const TEXTS: (keyof Settings)[] = ['ownPrefix'];
+const CHECKBOXES: (keyof Settings)[] = [
+  'showName',
+  'showIdentityPath',
+  'showBreadcrumb',
+  // interactive layer
+  'pinEnabled',
+  'smartMenu',
+  'highlightAll',
+  'treePanel',
+  // smart-menu copy fields
+  'copyName',
+  'copyIdentityPath',
+  'copyComponentSelector',
+  'copyDomSelector',
+  'copyBreadcrumb',
+  'copyAll',
+  // test tooling
+  'testLocator',
+  'testIdAudit',
+  'tlPlaywright',
+  'tlCypress',
+  'tlSelenium',
+  'tlTestingLibrary',
+  'tlMendix',
+];
+const SELECTS: (keyof Settings)[] = ['clickAction', 'treeSide', 'seleniumLang'];
+const TEXTS: (keyof Settings)[] = ['ownPrefix', 'testIdAttr'];
+const NUMBERS: (keyof Settings)[] = ['highlightAllCap'];
 
 function note(): void {
   const status = document.getElementById('status');
@@ -37,7 +62,29 @@ async function main(): Promise<void> {
     const el = document.getElementById(key) as HTMLInputElement | null;
     if (!el) continue;
     el.value = settings[key] as string;
-    el.addEventListener('change', () => persist(key, el.value));
+    el.addEventListener('change', () => {
+      let value = el.value;
+      if (key === 'testIdAttr') {
+        // Keep only characters valid in an attribute name so it can't break the
+        // CSS selectors the locator/audit build from it. Fall back to the default.
+        value = value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+        if (!value) value = 'data-testid';
+        el.value = value;
+      }
+      void persist(key, value);
+    });
+  }
+
+  for (const key of NUMBERS) {
+    const el = document.getElementById(key) as HTMLInputElement | null;
+    if (!el) continue;
+    el.value = String(settings[key]);
+    el.addEventListener('change', () => {
+      const min = el.min ? Number(el.min) : 1;
+      const n = Math.max(min, Math.floor(Number(el.value) || min));
+      el.value = String(n);
+      void persist(key, n);
+    });
   }
 }
 

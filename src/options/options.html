@@ -36,6 +36,60 @@
       </select>
     </label>
 
+    <h2 style="font-size:15px;margin-top:24px">Interactive tools</h2>
+    <p class="hint">While inspecting: press <kbd>F</kbd> to pin the element and open the panel, <kbd>H</kbd> to highlight all instances, <kbd>Esc</kbd> to unpin / exit.</p>
+
+    <label><input type="checkbox" id="pinEnabled" /> Enable pin / freeze panel (<kbd>F</kbd>)</label>
+    <label><input type="checkbox" id="smartMenu" /> Show the smart copy menu in the panel</label>
+    <label><input type="checkbox" id="highlightAll" /> Enable highlight all instances (<kbd>H</kbd>)</label>
+    <label><input type="checkbox" id="treePanel" /> Show the component tree in the panel</label>
+
+    <label>Panel side
+      <select id="treeSide">
+        <option value="right">Right</option>
+        <option value="left">Left</option>
+      </select>
+    </label>
+    <label>Highlight all — max instances
+      <input type="number" id="highlightAllCap" min="1" max="2000" style="width:72px" />
+    </label>
+    <p class="hint">Caps how many matches are highlighted at once (keeps big pages responsive).</p>
+
+    <h3 style="font-size:13px;margin-top:16px">Smart-menu copy buttons</h3>
+    <p class="hint">Choose which copy buttons appear in the pinned panel.</p>
+    <label><input type="checkbox" id="copyName" /> Name</label>
+    <label><input type="checkbox" id="copyIdentityPath" /> Identity path</label>
+    <label><input type="checkbox" id="copyComponentSelector" /> Component selector</label>
+    <label><input type="checkbox" id="copyDomSelector" /> DOM selector (CSS path)</label>
+    <label><input type="checkbox" id="copyBreadcrumb" /> Breadcrumb</label>
+    <label><input type="checkbox" id="copyAll" /> Copy all (one button copies every field, labelled)</label>
+
+    <h2 style="font-size:15px;margin-top:24px">Test tooling</h2>
+    <p class="hint">In the pinned panel: copy a ready-made locator for your test framework, and audit the page for elements missing a test id (<kbd>A</kbd>).</p>
+
+    <label><input type="checkbox" id="testLocator" /> Show the test-locator buttons</label>
+    <label><input type="checkbox" id="testIdAudit" /> Show the test-id status &amp; page audit</label>
+
+    <label>Test-id attribute
+      <input type="text" id="testIdAttr" placeholder="data-testid" size="16" />
+    </label>
+    <p class="hint">The attribute the generator and auditor key off (e.g. <code>data-testid</code>, <code>data-cy</code>).</p>
+
+    <label>Selenium language
+      <select id="seleniumLang">
+        <option value="csharp">C# (.NET)</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+      </select>
+    </label>
+
+    <h3 style="font-size:13px;margin-top:16px">Locator framework buttons</h3>
+    <label><input type="checkbox" id="tlPlaywright" /> Playwright</label>
+    <label><input type="checkbox" id="tlCypress" /> Cypress</label>
+    <label><input type="checkbox" id="tlSelenium" /> Selenium</label>
+    <label><input type="checkbox" id="tlTestingLibrary" /> Testing Library</label>
+    <label><input type="checkbox" id="tlMendix" /> Mendix (mx-name)</label>
+
     <!-- Component Src (Open in IDE) — hidden for release. Re-enable to restore IDE open + map imports.
     <label>IDE
       <select id="ide">

@@ -36,7 +36,8 @@ export function inspectVue(el: Element): InspectResult {
   let nearest: string | undefined;
   if (found) {
     const { v3 } = found;
-    for (let cur = found.inst; cur; cur = v3 ? cur.parent : cur.$parent) {
+    // Bounded against a cyclic parent pointer.
+    for (let cur = found.inst, n = 0; cur && n < 1000; cur = v3 ? cur.parent : cur.$parent, n++) {
       const name = v3 ? vue3Name(cur) : vue2Name(cur);
       if (!name) continue;
       if (!nearest) nearest = name;

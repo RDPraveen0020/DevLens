@@ -1,3 +1,14 @@
 node_modules/
 dist/
 *.zip
+
+# Design docs & specs (internal)
+docs/
+
+# Tests & test tooling
+tests/
+vitest.config.ts
+playwright.config.ts
+coverage/
+test-results/
+playwright-report/

@@ -79,7 +79,36 @@ The quickest way to use or share DevLens — no store account, no fee.
 1. Click the DevLens toolbar icon or press **`Alt+Shift+C`** to toggle inspect mode.
 2. **Hover** any element — the overlay highlights the component and shows a tooltip.
 3. **Click** to copy the identity path.
-4. Press **`Esc`** to exit inspect mode.
+4. Press **`F`** to *pin* the element: the highlight freezes and a side panel opens with
+   a smart copy menu, a **Highlight all instances** button, and the ancestor **component tree**
+   (click any row to highlight that ancestor).
+5. Press **`H`** to highlight every other instance of the pinned component.
+6. Press **`A`** to audit the page for elements missing a test id.
+7. Press **`Esc`** to unpin, or again to exit inspect mode.
+
+### Interactive panel
+
+| Action | Shortcut | What it does |
+|--------|----------|--------------|
+| **Pin / freeze** | `F` | Freezes the current element and opens the docked panel |
+| **Smart copy menu** | panel buttons | Copy the name, identity path, component selector, DOM selector, breadcrumb, or **Copy all** (every field, labelled). Each button flashes **Copied ✓**. |
+| **Highlight all instances** | `H` or button | Boxes every element of the same component on the page |
+| **Component tree** | panel | Ancestor chain, root→element; click a row to highlight it |
+| **Test locators** | panel buttons | Copy a ready-made locator for Playwright / Cypress / Selenium / Testing Library / Mendix |
+| **test-id audit** | `A` or button | Boxes every interactive element missing the test-id attribute (red); shows a suggested id for the pinned element |
+
+### Test tooling
+
+The panel's **Test** section turns the inspected element into test automation help:
+
+- **Selector generator** — picks the most stable strategy available (`data-testid` → `mx-name` → role+name → label → text → `#id` → CSS path) and formats it per framework. Example for a `<button>Save</button>`:
+  - Playwright `page.getByRole('button', { name: 'Save' })`
+  - Cypress `cy.contains('button', 'Save')`
+  - Selenium (C#) `driver.FindElement(By.XPath("//button[normalize-space()=\"Save\"]"))`
+  - Testing Library `screen.getByRole('button', { name: 'Save' })`
+  - Mendix `.mx-name-saveButton`
+  - Selenium language (C# / Python / Java) is configurable.
+- **data-testid auditor** — shows `✓ data-testid="…"` if the element has one, or a **suggested** id (`save-button`) with a **Copy attr** button if not. The **Audit page** button (key `A`) boxes every interactive element on the page that lacks the test id. On Mendix, elements covered by an `mx-name` widget count as addressable.
 
 ### Options
 
@@ -92,6 +121,14 @@ Open the extension's **Options** page to configure:
 | Show hierarchy breadcrumb | Toggle the ancestor chain |
 | **Component prefix** | Your app's selector prefix (e.g. `app`, from `angular.json`). DevLens shows the nearest component with this prefix, skipping library components. |
 | Click action | **Copy identity path** (default) or **Do nothing** |
+| Interactive tools | Toggle each of: pin/freeze panel, smart copy menu, highlight all, component tree |
+| Panel side | Dock the interactive panel on the **right** (default) or **left** |
+| Highlight all — max instances | Cap on how many matches are boxed at once (default 200) |
+| Smart-menu copy buttons | Choose which copy buttons appear (name, identity path, component selector, DOM selector, breadcrumb, Copy all) |
+| Test tooling | Toggle the locator generator and the test-id auditor |
+| Test-id attribute | The attribute both key off (default `data-testid`; e.g. `data-cy`) |
+| Selenium language | C# / Python / Java snippet flavor |
+| Locator framework buttons | Choose which of Playwright / Cypress / Selenium / Testing Library / Mendix appear |
 
 Settings sync via `chrome.storage.sync`.
 
@@ -100,6 +137,9 @@ Settings sync via `chrome.storage.sync`.
 ## Known limitations
 
 - Cross-origin iframes are not inspected.
+- **Highlight all instances** for React/Vue scans the DOM (capped, default 200), so on very
+  large pages some matches past the cap aren't boxed. Angular/Mendix/Blazor match by
+  selector/scope and aren't subject to the DOM-scan cap.
 - Source file paths require the selector map (Open in IDE feature); without it, only
   the identity path is shown.
 - Fully minified Angular components with attribute selectors may show a minified class

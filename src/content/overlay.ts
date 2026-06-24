@@ -1,9 +1,4 @@
-interface Box {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
+import type { Box } from '../shared/types';
 
 const STYLE = `
 :host { all: initial; }
@@ -11,6 +6,12 @@ const STYLE = `
   position: fixed; pointer-events: none; z-index: 2147483646;
   border: 1px solid #4f9cff; background: rgba(79,156,255,0.12); display: none;
 }
+.dl-multi { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 2147483645; }
+.dl-multi-box {
+  position: fixed; pointer-events: none;
+  border: 1px solid #f0883e; background: rgba(240,136,62,0.14);
+}
+.dl-multi-box.missing { border-color: #f14c4c; background: rgba(241,76,76,0.16); }
 .dl-tip {
   position: fixed; pointer-events: none; z-index: 2147483647;
   max-width: 360px; padding: 6px 8px; border-radius: 6px;
@@ -33,6 +34,7 @@ export class Overlay {
   private host: HTMLElement | null = null;
   private box: HTMLElement | null = null;
   private tip: HTMLElement | null = null;
+  private multi: HTMLElement | null = null;
 
   mount(): void {
     if (this.host) return;
@@ -41,15 +43,39 @@ export class Overlay {
     const root = host.attachShadow({ mode: 'open' });
     const style = document.createElement('style');
     style.textContent = STYLE;
+    const multi = document.createElement('div');
+    multi.className = 'dl-multi';
     const box = document.createElement('div');
     box.className = 'dl-box';
     const tip = document.createElement('div');
     tip.className = 'dl-tip';
-    root.append(style, box, tip);
+    root.append(style, multi, box, tip);
     document.documentElement.appendChild(host);
     this.host = host;
     this.box = box;
     this.tip = tip;
+    this.multi = multi;
+  }
+
+  /** Draw one box per rect. `variant` switches color (orange instances / red audit). */
+  showBoxes(boxes: Box[], variant: 'instances' | 'missing' = 'instances'): void {
+    if (!this.multi) return;
+    this.multi.replaceChildren();
+    for (const b of boxes) {
+      const el = document.createElement('div');
+      el.className = variant === 'missing' ? 'dl-multi-box missing' : 'dl-multi-box';
+      Object.assign(el.style, {
+        left: `${b.left}px`,
+        top: `${b.top}px`,
+        width: `${b.width}px`,
+        height: `${b.height}px`,
+      });
+      this.multi.appendChild(el);
+    }
+  }
+
+  clearBoxes(): void {
+    this.multi?.replaceChildren();
   }
 
   show(box: Box, tooltipHtml: string, tipX: number, tipY: number): void {
@@ -76,6 +102,6 @@ export class Overlay {
 
   destroy(): void {
     this.host?.remove();
-    this.host = this.box = this.tip = null;
+    this.host = this.box = this.tip = this.multi = null;
   }
 }

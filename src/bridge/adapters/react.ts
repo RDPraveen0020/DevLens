@@ -33,9 +33,10 @@ export function inspectReact(el: Element): InspectResult {
   while (node && !(fiber = fiberFromNode(node))) node = node.parentElement;
 
   // Walk the fiber's parent chain, collecting named component fibers (root-first).
+  // Bounded so a malformed/cyclic `return` pointer can't lock the page.
   const chain: string[] = [];
   let nearest: string | undefined;
-  for (let f = fiber; f; f = f.return) {
+  for (let f = fiber, n = 0; f && n < 1000; f = f.return, n++) {
     const name = fiberName(f);
     if (!name) continue;
     if (!nearest) nearest = name;
